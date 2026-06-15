@@ -9,6 +9,8 @@ import { N8N_WEBHOOK_URL } from "@/lib/constants";
 import { supabase } from "@/lib/supabase";
 import { formatDateTime, normalizeMessage, truncate } from "@/lib/utils";
 
+const CHAT_HISTORY_TABLE = "n8n_chat_histories";
+
 function TypingIndicator() {
   return (
     <div className="flex items-start gap-3">
@@ -48,9 +50,11 @@ function MessageBubble({ message }) {
         >
           {message.content}
         </div>
-        <div className="mt-1 px-2 text-[11px] text-zinc-600">
-          {formatDateTime(message.created_at || Date.now())}
-        </div>
+        {formatDateTime(message.created_at) ? (
+          <div className="mt-1 px-2 text-[11px] text-zinc-600">
+            {formatDateTime(message.created_at)}
+          </div>
+        ) : null}
       </div>
     </div>
   );
@@ -66,6 +70,7 @@ export default function ChatPage() {
   const [isLoadingMessages, setIsLoadingMessages] = useState(false);
   const [isSending, setIsSending] = useState(false);
   const [error, setError] = useState("");
+  const [storageWarning, setStorageWarning] = useState("");
   const [showHistory, setShowHistory] = useState(true);
   const bottomRef = useRef(null);
 
@@ -74,15 +79,45 @@ export default function ChatPage() {
     return activeSessionId.length > 18 ? `${activeSessionId.slice(0, 8)}...${activeSessionId.slice(-6)}` : activeSessionId;
   }, [activeSessionId]);
 
+  function getErrorMessage(fetchError) {
+    return fetchError?.message || fetchError?.details || "Unknown Supabase error";
+  }
+
+  function setChatStorageWarning(fetchError) {
+    setStorageWarning(
+      `Chat history is not available: ${getErrorMessage(fetchError)}. You can still chat, but messages may not be saved.`
+    );
+  }
+
+  async function saveChatMessage(role, content) {
+    const type = role === "user" ? "human" : "ai";
+
+    try {
+      const { error: saveError } = await supabase
+        .from(CHAT_HISTORY_TABLE)
+        .insert({
+          session_id: activeSessionId,
+          message: { type, content }
+        });
+
+      if (saveError) throw saveError;
+      return true;
+    } catch (saveError) {
+      console.log("Failed to save chat message", saveError);
+      setChatStorageWarning(saveError);
+      return false;
+    }
+  }
+
   async function loadSessions(nextActiveId) {
     setIsLoadingSessions(true);
     setError("");
 
     try {
       const { data, error: fetchError } = await supabase
-        .from("n8n_chat_history")
-        .select("session_id,message,created_at")
-        .order("created_at", { ascending: false })
+        .from(CHAT_HISTORY_TABLE)
+        .select("id,session_id,message")
+        .order("id", { ascending: false })
         .limit(1000);
 
       if (fetchError) throw fetchError;
@@ -97,62 +132,67 @@ export default function ChatPage() {
           grouped.set(row.session_id, {
             session_id: row.session_id,
             firstPreview: normalized.content,
-            lastTimestamp: row.created_at,
-            earliestTimestamp: row.created_at
+            lastId: row.id,
+            earliestId: row.id
           });
           return;
         }
 
-        if (new Date(row.created_at).getTime() < new Date(existing.earliestTimestamp).getTime()) {
-          existing.earliestTimestamp = row.created_at;
+        if (row.id < existing.earliestId) {
+          existing.earliestId = row.id;
           existing.firstPreview = normalized.content;
         }
       });
 
       const nextSessions = Array.from(grouped.values()).sort(
-        (a, b) => new Date(b.lastTimestamp).getTime() - new Date(a.lastTimestamp).getTime()
+        (a, b) => b.lastId - a.lastId
       );
 
       setSessions(nextSessions);
 
       const selectedId = nextActiveId || activeSessionId || nextSessions[0]?.session_id || crypto.randomUUID();
       setActiveSessionId(selectedId);
-      return selectedId;
+      return { selectedId, hasStoredSession: nextSessions.length > 0 };
     } catch (fetchError) {
       console.log("Failed to load chat sessions", fetchError);
-      setError("Unable to load chat history.");
+      setChatStorageWarning(fetchError);
       const fallbackId = activeSessionId || crypto.randomUUID();
       setActiveSessionId(fallbackId);
-      return fallbackId;
+      setSessions([]);
+      return { selectedId: fallbackId, hasStoredSession: false };
     } finally {
       setIsLoadingSessions(false);
     }
   }
 
-  async function loadConversation(sessionId) {
+  async function loadConversation(sessionId, options = {}) {
     if (!sessionId) return;
     setIsLoadingMessages(true);
     setError("");
 
     try {
       const { data, error: fetchError } = await supabase
-        .from("n8n_chat_history")
-        .select("id,message,created_at")
+        .from(CHAT_HISTORY_TABLE)
+        .select("id,message")
         .eq("session_id", sessionId)
-        .order("created_at", { ascending: true });
+        .order("id", { ascending: true });
 
       if (fetchError) throw fetchError;
 
       setMessages(
         (data || []).map((row) => ({
           id: row.id,
-          ...normalizeMessage(row.message),
-          created_at: row.created_at
+          ...normalizeMessage(row.message)
         }))
       );
     } catch (fetchError) {
       console.log("Failed to load conversation", fetchError);
-      setError("Unable to load this conversation.");
+      setChatStorageWarning(fetchError);
+      if (options.silent) {
+        setMessages([]);
+      } else {
+        setError(`Unable to load this conversation: ${getErrorMessage(fetchError)}`);
+      }
     } finally {
       setIsLoadingMessages(false);
     }
@@ -162,8 +202,12 @@ export default function ChatPage() {
     document.title = "Jarvis | Chat";
 
     async function boot() {
-      const selectedId = await loadSessions();
-      await loadConversation(selectedId);
+      const result = await loadSessions();
+      if (result.hasStoredSession) {
+        await loadConversation(result.selectedId);
+      } else {
+        setMessages([]);
+      }
     }
 
     boot();
@@ -179,6 +223,7 @@ export default function ChatPage() {
     setActiveSessionId(sessionId);
     setMessages([]);
     setInput("");
+    setError("");
     setShowHistory(false);
   }
 
@@ -207,14 +252,11 @@ export default function ChatPage() {
     setMessages((current) => [...current, optimisticUser]);
 
     try {
-      const { error: userSaveError } = await supabase
-        .from("n8n_chat_history")
-        .insert({
-          session_id: activeSessionId,
-          message: { role: "user", content: userMessage }
-        });
+      await saveChatMessage("user", userMessage);
 
-      if (userSaveError) throw userSaveError;
+      if (!N8N_WEBHOOK_URL) {
+        throw new Error("Jarvis webhook URL is missing.");
+      }
 
       const response = await fetch(N8N_WEBHOOK_URL, {
         method: "POST",
@@ -239,19 +281,12 @@ export default function ChatPage() {
         created_at: new Date().toISOString()
       };
 
-      const { error: assistantSaveError } = await supabase
-        .from("n8n_chat_history")
-        .insert({
-          session_id: activeSessionId,
-          message: { role: "assistant", content: assistantMessage.content }
-        });
-
-      if (assistantSaveError) throw assistantSaveError;
-
       setMessages((current) => [...current, assistantMessage]);
+      await saveChatMessage("assistant", assistantMessage.content);
       await loadSessions(activeSessionId);
     } catch (sendError) {
       console.log("Failed to send message", sendError);
+      setError(`Message failed: ${getErrorMessage(sendError)}`);
       showToast("Message failed to send", "error");
     } finally {
       setIsSending(false);
@@ -303,7 +338,7 @@ export default function ChatPage() {
                     }`}
                   >
                     <div className="text-sm font-semibold text-white">{truncate(session.firstPreview || "New conversation", 40)}</div>
-                    <div className="mt-2 text-xs text-zinc-500">{formatDateTime(session.lastTimestamp)}</div>
+                    <div className="mt-2 text-xs text-zinc-500">Latest message #{session.lastId}</div>
                   </button>
                 );
               })}
@@ -347,6 +382,11 @@ export default function ChatPage() {
         </div>
 
         <div className="min-h-0 flex-1 overflow-y-auto p-4">
+          {storageWarning ? (
+            <div className="mb-4 rounded-xl border border-jarvis-warning/30 bg-jarvis-warning/10 p-4 text-sm text-jarvis-warning">
+              {storageWarning}
+            </div>
+          ) : null}
           {error ? <ErrorState message={error} /> : null}
           {isLoadingMessages ? <LoadingSkeleton rows={4} /> : null}
           {!isLoadingMessages && !error && messages.length === 0 ? <EmptyState message="No messages yet" /> : null}
