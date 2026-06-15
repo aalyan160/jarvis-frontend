@@ -89,6 +89,24 @@ export default function ChatPage() {
     );
   }
 
+  function parseJarvisResponse(rawResponse) {
+    const text = String(rawResponse ?? "").trim();
+    if (!text) return "Done.";
+
+    try {
+      const parsed = JSON.parse(text);
+      if (typeof parsed === "string") return parsed;
+      if (parsed.reply) return String(parsed.reply);
+      if (parsed.output) return String(parsed.output);
+      if (parsed.response) return String(parsed.response);
+      if (parsed.text) return String(parsed.text);
+      if (parsed.message?.content) return String(parsed.message.content);
+      return JSON.stringify(parsed, null, 2);
+    } catch {
+      return text;
+    }
+  }
+
   async function saveChatMessage(role, content) {
     const type = role === "user" ? "human" : "ai";
 
@@ -273,11 +291,11 @@ export default function ChatPage() {
         throw new Error(`Jarvis webhook returned ${response.status}`);
       }
 
-      const jarvisResponse = await response.text();
+      const jarvisResponse = parseJarvisResponse(await response.text());
       const assistantMessage = {
         id: `assistant-${Date.now()}`,
         role: "assistant",
-        content: jarvisResponse || "Done.",
+        content: jarvisResponse,
         created_at: new Date().toISOString()
       };
 
