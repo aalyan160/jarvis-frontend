@@ -1,0 +1,53 @@
+{
+  "name": "WhatsApp Agent v1",
+  "nodes": [
+    {
+      "parameters": {},
+      "id": "6f4e4b9d-9b40-4fcb-87a0-8e0ef47056cf",
+      "name": "When Executed by Another Workflow",
+      "type": "n8n-nodes-base.executeWorkflowTrigger",
+      "typeVersion": 1,
+      "position": [
+        -420,
+        0
+      ]
+    },
+    {
+      "parameters": {
+        "jsCode": "const input = $input.first().json || {};\n\nfunction clean(value) {\n  return String(value ?? '').trim();\n}\n\nfunction normalizePhone(value) {\n  const raw = clean(value);\n  if (!raw) return '';\n  const withoutSpaces = raw.replace(/[\\s()-]/g, '');\n  if (withoutSpaces.startsWith('+')) return withoutSpaces.slice(1);\n  return withoutSpaces;\n}\n\nfunction makeWaLink(to, message) {\n  if (!to || !message) return '';\n  return `https://wa.me/${to}?text=${encodeURIComponent(message)}`;\n}\n\nconst action = clean(input.action || 'send_whatsapp_message');\nconst sessionId = clean(input.sessionId || input.session_id || '');\nconst userId = clean(input.userId || input.user_id || 'aliyan');\nconst contactName = clean(input.contactName || input.contact_name || input.name || '');\nconst to = normalizePhone(input.to || input.phone || input.whatsapp || input.whatsappNumber || input.whatsapp_number || '');\nconst message = clean(input.message || input.text || input.body || input.chatInput || input.query || '');\n\n// Provider-ready values. In the next phase, pass these inputs from Main Brain or replace them with n8n credentials/env values.\nconst provider = clean(input.provider || 'meta_cloud');\nconst apiVersion = clean(input.whatsappApiVersion || input.apiVersion || 'v21.0');\nconst phoneNumberId = clean(input.whatsappPhoneNumberId || input.phoneNumberId || '');\nconst apiToken = clean(input.whatsappApiToken || input.apiToken || '');\nconst apiUrl = clean(input.whatsappApiUrl || (phoneNumberId ? `https://graph.facebook.com/${apiVersion}/${phoneNumberId}/messages` : ''));\n\nconst base = {\n  success: false,\n  agent: 'whatsapp',\n  action,\n  sessionId,\n  userId,\n  contactName,\n  to,\n  provider\n};\n\nif (!['send_whatsapp_message', 'draft_whatsapp_message', 'create_whatsapp_send_link'].includes(action)) {\n  return [{\n    json: {\n      ...base,\n      status: 'unsupported_action',\n      reply: `WhatsApp Agent does not support action: ${action}`\n    }\n  }];\n}\n\nif (!message) {\n  return [{\n    json: {\n      ...base,\n      status: 'missing_message',\n      reply: 'Please provide the WhatsApp message text.'\n    }\n  }];\n}\n\nif (!to) {\n  return [{\n    json: {\n      ...base,\n      status: 'missing_recipient',\n      reply: contactName\n        ? `I need ${contactName}'s WhatsApp number before I can send this.`\n        : 'I need the recipient WhatsApp number before I can send this.'\n    }\n  }];\n}\n\nconst whatsappUrl = makeWaLink(to, message);\n\nif (action === 'draft_whatsapp_message' || action === 'create_whatsapp_send_link') {\n  return [{\n    json: {\n      ...base,\n      success: true,\n      status: 'ready_to_send',\n      message,\n      whatsapp_url: whatsappUrl,\n      reply: contactName\n        ? `WhatsApp message prepared for ${contactName}.`\n        : 'WhatsApp message prepared.'\n    }\n  }];\n}\n\nif (!apiUrl || !apiToken) {\n  return [{\n    json: {\n      ...base,\n      status: 'provider_not_configured',\n      message,\n      whatsapp_url: whatsappUrl,\n      reply: 'WhatsApp auto-send is ready, but the WhatsApp API is not connected yet. Add API URL/token in the next phase.'\n    }\n  }];\n}\n\nconst requestBody = {\n  messaging_product: 'whatsapp',\n  to,\n  type: 'text',\n  text: {\n    preview_url: false,\n    body: message\n  }\n};\n\ntry {\n  const response = await fetch(apiUrl, {\n    method: 'POST',\n    headers: {\n      Authorization: `Bearer ${apiToken}`,\n      'Content-Type': 'application/json'\n    },\n    body: JSON.stringify(requestBody)\n  });\n\n  const rawResponse = await response.text();\n  let parsedResponse;\n  try {\n    parsedResponse = JSON.parse(rawResponse);\n  } catch {\n    parsedResponse = { raw: rawResponse };\n  }\n\n  if (!response.ok) {\n    return [{\n      json: {\n        ...base,\n        status: 'send_failed',\n        message,\n        requestBody,\n        providerResponse: parsedResponse,\n        reply: `WhatsApp send failed: ${parsedResponse?.error?.message || response.statusText || 'Unknown provider error'}`\n      }\n    }];\n  }\n\n  return [{\n    json: {\n      ...base,\n      success: true,\n      status: 'sent',\n      message,\n      providerResponse: parsedResponse,\n      reply: contactName\n        ? `WhatsApp message sent to ${contactName}.`\n        : 'WhatsApp message sent.'\n    }\n  }];\n} catch (error) {\n  return [{\n    json: {\n      ...base,\n      status: 'send_error',\n      message,\n      reply: `WhatsApp send error: ${error.message}`\n    }\n  }];\n}\n"
+      },
+      "id": "a980698e-123f-4d8a-8d7f-822e32bb49db",
+      "name": "WhatsApp Agent Logic",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -140,
+        0
+      ]
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "When Executed by Another Workflow": {
+      "main": [
+        [
+          {
+            "node": "WhatsApp Agent Logic",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "versionId": "95eea597-5b99-45c2-bec9-c6d3c60200da",
+  "meta": {
+    "templateCredsSetupCompleted": true
+  },
+  "id": "whatsapp-agent-v1",
+  "tags": []
+}
