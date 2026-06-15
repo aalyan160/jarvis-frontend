@@ -283,7 +283,9 @@ export default function ChatPage() {
         },
         body: JSON.stringify({
           chatInput: userMessage,
-          session_id: activeSessionId
+          sessionId: activeSessionId,
+          session_id: activeSessionId,
+          action: "chat"
         })
       });
 
