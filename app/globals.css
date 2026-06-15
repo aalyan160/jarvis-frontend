@@ -1,0 +1,79 @@
+@import url("https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap");
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  color-scheme: dark;
+  --background: #000000;
+  --surface: #111111;
+  --card: #1a1a1a;
+  --border: #222222;
+  --accent: #00d4ff;
+  --muted: #888888;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+html {
+  background: var(--background);
+}
+
+body {
+  margin: 0;
+  min-height: 100vh;
+  background: var(--background);
+  color: #ffffff;
+  font-family: "Inter", ui-sans-serif, system-ui, sans-serif;
+}
+
+button,
+input,
+textarea {
+  font: inherit;
+}
+
+button {
+  transition: all 0.2s ease;
+}
+
+::selection {
+  background: rgba(0, 212, 255, 0.28);
+  color: #ffffff;
+}
+
+::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+
+::-webkit-scrollbar-track {
+  background: #0a0a0a;
+}
+
+::-webkit-scrollbar-thumb {
+  background: rgba(0, 212, 255, 0.55);
+  border-radius: 999px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: rgba(0, 212, 255, 0.85);
+}
+
+.skeleton-shimmer {
+  background-image: linear-gradient(
+    90deg,
+    #151515 0,
+    #232323 44px,
+    #151515 88px
+  );
+  background-size: 240px 100%;
+}
+
+.focus-ring {
+  outline: none;
+  box-shadow: 0 0 0 1px rgba(0, 212, 255, 0.72), 0 0 20px rgba(0, 212, 255, 0.18);
+}

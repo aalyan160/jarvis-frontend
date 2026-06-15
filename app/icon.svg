@@ -1,0 +1,14 @@
+<svg width="64" height="64" viewBox="0 0 64 64" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <rect width="64" height="64" rx="14" fill="#000000"/>
+  <path d="M39.6 14V39.6C39.6 47.08 35.04 51.2 28.04 51.2C22.88 51.2 19.24 49 16.96 45.16L22.76 41.64C23.92 43.72 25.4 44.92 27.72 44.92C30.84 44.92 32.48 43.12 32.48 39.52V14H39.6Z" fill="#00D4FF"/>
+  <path d="M39.6 14V39.6C39.6 47.08 35.04 51.2 28.04 51.2C22.88 51.2 19.24 49 16.96 45.16L22.76 41.64C23.92 43.72 25.4 44.92 27.72 44.92C30.84 44.92 32.48 43.12 32.48 39.52V14H39.6Z" fill="#00D4FF" filter="url(#glow)"/>
+  <defs>
+    <filter id="glow" x="6" y="4" width="44" height="58" filterUnits="userSpaceOnUse" color-interpolation-filters="sRGB">
+      <feGaussianBlur stdDeviation="3.5" result="blur"/>
+      <feMerge>
+        <feMergeNode in="blur"/>
+        <feMergeNode in="SourceGraphic"/>
+      </feMerge>
+    </filter>
+  </defs>
+</svg>
