@@ -487,7 +487,7 @@ export default function ChatPage() {
         </div>
 
         <div className="border-t border-jarvis-border bg-jarvis-surface p-3 sm:p-4">
-          <div className="mx-auto flex max-w-4xl items-end gap-2 rounded-xl border border-white/[0.09] bg-black/80 p-1.5 shadow-[0_12px_36px_rgba(0,0,0,0.28)] transition-all focus-within:border-jarvis-accent/60 focus-within:shadow-glow">
+          <div className="mx-auto flex max-w-4xl items-end gap-2 rounded-xl border border-white/[0.09] bg-black/80 p-1.5 shadow-[0_12px_36px_rgba(0,0,0,0.28)] transition-all focus-within:border-[#00BCD4] focus-within:shadow-[0_0_0_2px_#00BCD4]">
             <textarea
               ref={inputRef}
               value={input}
@@ -502,7 +502,7 @@ export default function ChatPage() {
               type="button"
               onClick={sendMessage}
               disabled={!input.trim() || isSending}
-              className="grid h-12 w-12 shrink-0 place-items-center rounded-lg bg-jarvis-accent text-black shadow-[0_0_18px_rgba(0,212,255,0.2)] hover:shadow-glow disabled:cursor-not-allowed disabled:bg-zinc-800 disabled:text-zinc-600 disabled:shadow-none"
+              className="grid h-12 w-12 shrink-0 place-items-center rounded-lg bg-[#00DFF7] text-black shadow-[0_0_18px_rgba(0,223,247,0.28)] transition-all duration-200 hover:scale-[1.04] hover:bg-[#32EFFF] hover:shadow-[0_0_24px_rgba(50,239,255,0.5)] disabled:cursor-not-allowed disabled:bg-zinc-800 disabled:text-zinc-600 disabled:shadow-none disabled:hover:scale-100"
               aria-label="Send message"
             >
               <Send className="h-5 w-5" />
