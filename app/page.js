@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
-import { ArrowLeft, BrainCircuit, Clock3, MessageSquarePlus, Send } from "lucide-react";
+import { BrainCircuit, Clock3, MessageSquarePlus, Send, X } from "lucide-react";
 import ReactMarkdown from "react-markdown";
 import LoadingSkeleton from "@/components/LoadingSkeleton";
 import { EmptyState, ErrorState } from "@/components/StateViews";
@@ -120,7 +120,7 @@ export default function ChatPage() {
   const [isSending, setIsSending] = useState(false);
   const [error, setError] = useState("");
   const [storageWarning, setStorageWarning] = useState("");
-  const [showHistory, setShowHistory] = useState(true);
+  const [showHistory, setShowHistory] = useState(false);
   const bottomRef = useRef(null);
   const inputRef = useRef(null);
 
@@ -292,6 +292,24 @@ export default function ChatPage() {
     textarea.style.height = `${Math.min(textarea.scrollHeight, 144)}px`;
   }, [input]);
 
+  useEffect(() => {
+    function openHistory() {
+      setShowHistory(true);
+    }
+
+    function closeHistoryOnEscape(event) {
+      if (event.key === "Escape") setShowHistory(false);
+    }
+
+    window.addEventListener("jarvis:open-chat-history", openHistory);
+    window.addEventListener("keydown", closeHistoryOnEscape);
+
+    return () => {
+      window.removeEventListener("jarvis:open-chat-history", openHistory);
+      window.removeEventListener("keydown", closeHistoryOnEscape);
+    };
+  }, []);
+
   async function startNewChat() {
     const sessionId = crypto.randomUUID();
     setActiveSessionId(sessionId);
@@ -377,21 +395,45 @@ export default function ChatPage() {
   }
 
   return (
-    <div className="grid h-[calc(100dvh-5.5rem)] min-h-[500px] grid-cols-1 gap-4 sm:h-[calc(100dvh-6.5rem)] xl:grid-cols-[310px_minmax(0,1fr)]">
-      <section className={`${showHistory ? "flex" : "hidden"} min-h-0 flex-col rounded-xl border border-jarvis-border bg-jarvis-surface xl:flex`}>
+    <div className="h-[calc(100dvh-5.5rem)] min-h-[500px] sm:h-[calc(100dvh-6.5rem)]">
+      <div
+        className={`fixed inset-x-0 bottom-0 top-14 z-40 bg-black/65 backdrop-blur-[2px] transition-opacity duration-300 lg:left-[260px] ${
+          showHistory ? "opacity-100" : "pointer-events-none opacity-0"
+        }`}
+        onClick={() => setShowHistory(false)}
+        aria-hidden="true"
+      />
+
+      <aside
+        className={`fixed bottom-0 left-0 top-14 z-50 flex w-[320px] max-w-[calc(100vw-1rem)] flex-col border-r border-jarvis-border bg-jarvis-surface shadow-[18px_0_50px_rgba(0,0,0,0.45)] transition-transform duration-300 ease-in-out lg:left-[260px] ${
+          showHistory ? "translate-x-0" : "pointer-events-none -translate-x-full"
+        }`}
+        aria-label="Chat history"
+        aria-hidden={!showHistory}
+      >
         <div className="flex items-center justify-between border-b border-jarvis-border px-4 py-3.5">
           <div>
             <h2 className="text-sm font-bold text-zinc-100">Conversations</h2>
             <p className="mt-0.5 text-xs font-medium text-zinc-600">{sessions.length} saved sessions</p>
           </div>
-          <button
-            type="button"
-            onClick={startNewChat}
-            className="grid h-11 w-11 place-items-center rounded-lg border border-jarvis-accent/40 bg-jarvis-accent/10 text-jarvis-accent hover:shadow-glow"
-            aria-label="New chat"
-          >
-            <MessageSquarePlus className="h-5 w-5" />
-          </button>
+          <div className="flex items-center gap-2">
+            <button
+              type="button"
+              onClick={startNewChat}
+              className="grid h-10 w-10 place-items-center rounded-lg border border-jarvis-accent/40 bg-jarvis-accent/10 text-jarvis-accent hover:shadow-glow"
+              aria-label="New chat"
+            >
+              <MessageSquarePlus className="h-5 w-5" />
+            </button>
+            <button
+              type="button"
+              onClick={() => setShowHistory(false)}
+              className="grid h-10 w-10 place-items-center rounded-lg border border-jarvis-border text-zinc-400 hover:border-[#00BCD4] hover:bg-[#00BCD4]/10 hover:text-[#00BCD4]"
+              aria-label="Close chat history"
+            >
+              <X className="h-5 w-5" />
+            </button>
+          </div>
         </div>
 
         <div className="sidebar-scrollbar min-h-0 flex-1 overflow-y-auto px-2 py-2">
@@ -431,19 +473,11 @@ export default function ChatPage() {
             </div>
           ) : null}
         </div>
-      </section>
+      </aside>
 
-      <section className={`${showHistory ? "hidden" : "flex"} min-h-0 flex-col rounded-xl border border-jarvis-border bg-jarvis-surface xl:flex`}>
+      <section className="flex h-full min-h-0 flex-col rounded-xl border border-jarvis-border bg-jarvis-surface">
         <div className="flex min-h-[68px] items-center justify-between gap-3 border-b border-jarvis-border px-4 py-3 sm:px-5">
           <div className="flex min-w-0 items-center gap-2">
-            <button
-              type="button"
-              onClick={() => setShowHistory(true)}
-              className="grid h-10 w-10 place-items-center rounded-lg border border-jarvis-border text-zinc-300 hover:border-jarvis-accent hover:text-jarvis-accent hover:shadow-softGlow xl:hidden"
-              aria-label="Back to conversations"
-            >
-              <ArrowLeft className="h-5 w-5" />
-            </button>
             <div className="grid h-10 w-10 shrink-0 place-items-center rounded-lg border border-jarvis-accent/25 bg-jarvis-accent/10 text-jarvis-accent shadow-softGlow">
               <BrainCircuit className="h-5 w-5" />
             </div>

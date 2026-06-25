@@ -2,7 +2,7 @@
 
 import { useEffect, useMemo, useState } from "react";
 import { usePathname } from "next/navigation";
-import { Menu } from "lucide-react";
+import { History, Menu } from "lucide-react";
 import BootAnimation from "@/components/BootAnimation";
 import Sidebar from "@/components/Sidebar";
 import { ToastProvider } from "@/components/Toast";
@@ -70,6 +70,17 @@ export default function AppShell({ children }) {
               <Menu className="h-5 w-5" />
             </button>
             <h1 className="truncate text-lg font-bold text-white">{title}</h1>
+            {pathname === "/" ? (
+              <button
+                type="button"
+                onClick={() => window.dispatchEvent(new CustomEvent("jarvis:open-chat-history"))}
+                className="grid h-9 w-9 shrink-0 place-items-center rounded-lg border border-jarvis-border text-zinc-400 transition-colors hover:border-[#00BCD4] hover:bg-[#00BCD4]/10 hover:text-[#00BCD4]"
+                aria-label="Open chat history"
+                title="Chat history"
+              >
+                <History className="h-[18px] w-[18px]" />
+              </button>
+            ) : null}
             <div className="flex items-center gap-2 rounded-full border border-jarvis-success/20 bg-jarvis-success/[0.07] px-2.5 py-1 text-xs font-semibold text-zinc-300">
               <span className="h-2 w-2 rounded-full bg-jarvis-success shadow-[0_0_10px_rgba(0,255,136,0.75)] animate-pulseDot" />
               Online
