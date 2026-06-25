@@ -487,7 +487,7 @@ export default function ChatPage() {
         </div>
 
         <div className="border-t border-jarvis-border bg-jarvis-surface p-3 sm:p-4">
-          <div className="mx-auto flex max-w-4xl items-end gap-2 rounded-xl border border-white/[0.09] bg-black/80 p-1.5 shadow-[0_12px_36px_rgba(0,0,0,0.28)] transition-all focus-within:border-[#00BCD4] focus-within:shadow-[0_0_0_2px_#00BCD4]">
+          <div className="mx-auto flex max-w-4xl items-end gap-2 rounded-xl border border-white/[0.09] bg-black/80 p-1.5 shadow-[0_12px_36px_rgba(0,0,0,0.28)] transition-[box-shadow,border-color] duration-200 ease-in-out focus-within:border-[#00BCD4] focus-within:shadow-[0_0_0_2px_rgba(0,188,212,0.3)]">
             <textarea
               ref={inputRef}
               value={input}
