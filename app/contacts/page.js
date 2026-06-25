@@ -2,6 +2,7 @@
 
 import { useEffect, useMemo, useState } from "react";
 import { Mail, MessageCircle, Phone, Search } from "lucide-react";
+import { useAuth } from "@/components/AuthProvider";
 import LoadingSkeleton from "@/components/LoadingSkeleton";
 import { EmptyState, ErrorState } from "@/components/StateViews";
 import { supabase } from "@/lib/supabase";
@@ -19,12 +20,15 @@ function ContactLine({ icon: Icon, children, accentClass = "text-jarvis-accent" 
 }
 
 export default function ContactsPage() {
+  const { user } = useAuth();
   const [contacts, setContacts] = useState([]);
   const [search, setSearch] = useState("");
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState("");
 
   useEffect(() => {
+    if (!user) return;
+
     document.title = "Jarvis | Contacts";
 
     async function loadContacts() {
@@ -32,6 +36,7 @@ export default function ContactsPage() {
         const { data, error: fetchError } = await supabase
           .from("contacts")
           .select("*")
+          .eq("user_id", user.id)
           .order("name", { ascending: true });
 
         if (fetchError) throw fetchError;
@@ -45,7 +50,7 @@ export default function ContactsPage() {
     }
 
     loadContacts();
-  }, []);
+  }, [user]);
 
   const visibleContacts = useMemo(() => {
     const query = search.trim().toLowerCase();

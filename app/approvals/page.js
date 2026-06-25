@@ -1,7 +1,8 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import { Check, ChevronDown, ChevronUp, X } from "lucide-react";
+import { useAuth } from "@/components/AuthProvider";
 import LoadingSkeleton from "@/components/LoadingSkeleton";
 import { EmptyState, ErrorState } from "@/components/StateViews";
 import { useToast } from "@/components/Toast";
@@ -69,19 +70,23 @@ function ApprovalCard({ approval, isPending, expanded, onToggle, onDecision }) {
 
 export default function ApprovalsPage() {
   const { showToast } = useToast();
+  const { user } = useAuth();
   const [approvals, setApprovals] = useState([]);
   const [activeTab, setActiveTab] = useState("pending");
   const [expanded, setExpanded] = useState({});
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState("");
 
-  async function loadApprovals() {
+  const loadApprovals = useCallback(async () => {
+    if (!user) return;
+
     setError("");
 
     try {
       const { data, error: fetchError } = await supabase
         .from("approvals")
         .select("*")
+        .eq("user_id", user.id)
         .order("created_at", { ascending: false });
 
       if (fetchError) throw fetchError;
@@ -92,32 +97,46 @@ export default function ApprovalsPage() {
     } finally {
       setIsLoading(false);
     }
-  }
+  }, [user]);
 
   useEffect(() => {
+    if (!user) return undefined;
+
     document.title = "Jarvis | Approvals";
     loadApprovals();
 
     const channel = supabase
       .channel("approvals-page")
-      .on("postgres_changes", { event: "*", schema: "public", table: "approvals" }, loadApprovals)
+      .on(
+        "postgres_changes",
+        {
+          event: "*",
+          schema: "public",
+          table: "approvals",
+          filter: `user_id=eq.${user.id}`
+        },
+        loadApprovals
+      )
       .subscribe();
 
     return () => {
       supabase.removeChannel(channel);
     };
-  }, []);
+  }, [loadApprovals, user]);
 
   const pending = useMemo(() => approvals.filter((approval) => approval.status === "pending"), [approvals]);
   const history = useMemo(() => approvals.filter((approval) => approval.status !== "pending"), [approvals]);
   const visibleApprovals = activeTab === "pending" ? pending : history;
 
   async function updateStatus(id, status) {
+    if (!user) return;
+
     try {
       const { error: updateError } = await supabase
         .from("approvals")
         .update({ status })
-        .eq("id", id);
+        .eq("id", id)
+        .eq("user_id", user.id);
 
       if (updateError) throw updateError;
 

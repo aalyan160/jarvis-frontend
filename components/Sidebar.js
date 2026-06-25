@@ -1,15 +1,20 @@
 "use client";
 
 import Link from "next/link";
-import { usePathname } from "next/navigation";
+import { usePathname, useRouter } from "next/navigation";
+import { useState } from "react";
 import {
   Bell,
   ClipboardList,
   Contact,
   FileClock,
+  LoaderCircle,
+  LogOut,
   MessageSquareText,
   X
 } from "lucide-react";
+import { useToast } from "@/components/Toast";
+import { supabase } from "@/lib/supabase";
 
 const navItems = [
   {
@@ -51,6 +56,25 @@ const navItems = [
 
 export default function Sidebar({ isOpen, onClose, pendingApprovals = 0 }) {
   const pathname = usePathname();
+  const router = useRouter();
+  const { showToast } = useToast();
+  const [isLoggingOut, setIsLoggingOut] = useState(false);
+
+  async function handleLogout() {
+    if (isLoggingOut) return;
+    setIsLoggingOut(true);
+
+    const { error } = await supabase.auth.signOut();
+    if (error) {
+      showToast("Logout failed", "error");
+      setIsLoggingOut(false);
+      return;
+    }
+
+    onClose();
+    router.replace("/login");
+    router.refresh();
+  }
 
   return (
     <>
@@ -113,8 +137,24 @@ export default function Sidebar({ isOpen, onClose, pendingApprovals = 0 }) {
           })}
         </nav>
 
-        <div className="border-t border-jarvis-border px-5 py-4 text-xs text-zinc-600">
-          jarvis.alyanabbas.tech
+        <div className="flex items-center justify-between gap-3 border-t border-jarvis-border px-5 py-3">
+          <span className="min-w-0 truncate text-xs text-zinc-600">
+            jarvis.alyanabbas.tech
+          </span>
+          <button
+            type="button"
+            onClick={handleLogout}
+            disabled={isLoggingOut}
+            className="grid h-9 w-9 shrink-0 cursor-pointer place-items-center rounded-lg border border-[#00BCD4]/30 text-[#00BCD4] transition-all duration-200 hover:border-[#00BCD4] hover:bg-[#00BCD4]/10 hover:text-white disabled:cursor-not-allowed disabled:opacity-50"
+            aria-label="Logout"
+            title="Logout"
+          >
+            {isLoggingOut ? (
+              <LoaderCircle className="h-[18px] w-[18px] animate-spin" />
+            ) : (
+              <LogOut className="h-[18px] w-[18px]" />
+            )}
+          </button>
         </div>
       </aside>
     </>

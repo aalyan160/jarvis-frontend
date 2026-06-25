@@ -2,6 +2,7 @@
 
 import { useEffect, useMemo, useState } from "react";
 import { ChevronDown, ChevronUp, Clock } from "lucide-react";
+import { useAuth } from "@/components/AuthProvider";
 import LoadingSkeleton from "@/components/LoadingSkeleton";
 import { EmptyState, ErrorState } from "@/components/StateViews";
 import { STATUS_OPTIONS } from "@/lib/constants";
@@ -30,6 +31,7 @@ function ExpandablePreview({ label, value, expanded, onToggle }) {
 }
 
 export default function LogsPage() {
+  const { user } = useAuth();
   const [logs, setLogs] = useState([]);
   const [activeFilter, setActiveFilter] = useState("All");
   const [expanded, setExpanded] = useState({});
@@ -37,6 +39,8 @@ export default function LogsPage() {
   const [error, setError] = useState("");
 
   useEffect(() => {
+    if (!user) return;
+
     document.title = "Jarvis | Tool Logs";
 
     async function loadLogs() {
@@ -44,6 +48,7 @@ export default function LogsPage() {
         const { data, error: fetchError } = await supabase
           .from("tool_logs")
           .select("*")
+          .eq("user_id", user.id)
           .order("created_at", { ascending: false });
 
         if (fetchError) throw fetchError;
@@ -57,7 +62,7 @@ export default function LogsPage() {
     }
 
     loadLogs();
-  }, []);
+  }, [user]);
 
   const visibleLogs = useMemo(() => {
     if (activeFilter === "All") return logs;

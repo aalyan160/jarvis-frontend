@@ -2,6 +2,7 @@
 
 import { useEffect, useMemo, useState } from "react";
 import { CalendarClock, Clock } from "lucide-react";
+import { useAuth } from "@/components/AuthProvider";
 import LoadingSkeleton from "@/components/LoadingSkeleton";
 import { EmptyState, ErrorState } from "@/components/StateViews";
 import { STATUS_OPTIONS } from "@/lib/constants";
@@ -9,12 +10,15 @@ import { supabase } from "@/lib/supabase";
 import { formatDate, formatDateTime, normalizedKey, readableStatus, statusClass } from "@/lib/utils";
 
 export default function TasksPage() {
+  const { user } = useAuth();
   const [tasks, setTasks] = useState([]);
   const [activeFilter, setActiveFilter] = useState("All");
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState("");
 
   useEffect(() => {
+    if (!user) return;
+
     document.title = "Jarvis | Tasks";
 
     async function loadTasks() {
@@ -22,6 +26,7 @@ export default function TasksPage() {
         const { data, error: fetchError } = await supabase
           .from("tasks")
           .select("*")
+          .eq("user_id", user.id)
           .order("created_at", { ascending: false });
 
         if (fetchError) throw fetchError;
@@ -35,7 +40,7 @@ export default function TasksPage() {
     }
 
     loadTasks();
-  }, []);
+  }, [user]);
 
   const visibleTasks = useMemo(() => {
     if (activeFilter === "All") return tasks;

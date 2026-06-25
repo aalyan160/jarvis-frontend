@@ -4,6 +4,7 @@ import { useEffect, useMemo, useState } from "react";
 import { usePathname } from "next/navigation";
 import { History, Menu } from "lucide-react";
 import BootAnimation from "@/components/BootAnimation";
+import { AuthLoadingScreen, useAuth } from "@/components/AuthProvider";
 import Sidebar from "@/components/Sidebar";
 import { ToastProvider } from "@/components/Toast";
 import { PAGE_TITLES } from "@/lib/constants";
@@ -11,12 +12,18 @@ import { supabase } from "@/lib/supabase";
 
 export default function AppShell({ children }) {
   const pathname = usePathname();
+  const { user, isLoading: isCheckingAuth } = useAuth();
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
   const [pendingApprovals, setPendingApprovals] = useState(0);
 
   const title = useMemo(() => PAGE_TITLES[pathname] || "Jarvis", [pathname]);
 
   useEffect(() => {
+    if (!user) {
+      setPendingApprovals(0);
+      return undefined;
+    }
+
     let ignore = false;
 
     async function loadPendingCount() {
@@ -24,7 +31,8 @@ export default function AppShell({ children }) {
         const { count, error } = await supabase
           .from("approvals")
           .select("id", { count: "exact", head: true })
-          .eq("status", "pending");
+          .eq("status", "pending")
+          .eq("user_id", user.id);
 
         if (error) throw error;
         if (!ignore) setPendingApprovals(count || 0);
@@ -37,18 +45,35 @@ export default function AppShell({ children }) {
 
     const channel = supabase
       .channel("sidebar-approvals-count")
-      .on("postgres_changes", { event: "*", schema: "public", table: "approvals" }, loadPendingCount)
+      .on(
+        "postgres_changes",
+        {
+          event: "*",
+          schema: "public",
+          table: "approvals",
+          filter: `user_id=eq.${user.id}`
+        },
+        loadPendingCount
+      )
       .subscribe();
 
     return () => {
       ignore = true;
       supabase.removeChannel(channel);
     };
-  }, []);
+  }, [user]);
 
   useEffect(() => {
     setIsSidebarOpen(false);
   }, [pathname]);
+
+  if (pathname === "/login") {
+    return children;
+  }
+
+  if (isCheckingAuth || !user) {
+    return <AuthLoadingScreen />;
+  }
 
   return (
     <ToastProvider>

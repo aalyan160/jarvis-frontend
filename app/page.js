@@ -3,6 +3,7 @@
 import { useEffect, useRef, useState } from "react";
 import { BrainCircuit, Clock3, MessageSquarePlus, Send, X } from "lucide-react";
 import ReactMarkdown from "react-markdown";
+import { useAuth } from "@/components/AuthProvider";
 import LoadingSkeleton from "@/components/LoadingSkeleton";
 import { EmptyState, ErrorState } from "@/components/StateViews";
 import { useToast } from "@/components/Toast";
@@ -111,6 +112,7 @@ function MessageBubble({ message }) {
 
 export default function ChatPage() {
   const { showToast } = useToast();
+  const { user } = useAuth();
   const [sessions, setSessions] = useState([]);
   const [activeSessionId, setActiveSessionId] = useState("");
   const [messages, setMessages] = useState([]);
@@ -153,6 +155,8 @@ export default function ChatPage() {
   }
 
   async function saveChatMessage(role, content) {
+    if (!user) return false;
+
     const type = role === "user" ? "human" : "ai";
 
     try {
@@ -160,6 +164,7 @@ export default function ChatPage() {
         .from(CHAT_HISTORY_TABLE)
         .insert({
           session_id: activeSessionId,
+          user_id: user.id,
           message: { type, content, created_at: new Date().toISOString() }
         });
 
@@ -173,6 +178,8 @@ export default function ChatPage() {
   }
 
   async function loadSessions(nextActiveId) {
+    if (!user) return { selectedId: "", hasStoredSession: false };
+
     setIsLoadingSessions(true);
     setError("");
 
@@ -180,6 +187,7 @@ export default function ChatPage() {
       const { data, error: fetchError } = await supabase
         .from(CHAT_HISTORY_TABLE)
         .select("id,session_id,message")
+        .eq("user_id", user.id)
         .order("id", { ascending: false })
         .limit(1000);
 
@@ -233,7 +241,7 @@ export default function ChatPage() {
   }
 
   async function loadConversation(sessionId, options = {}) {
-    if (!sessionId) return;
+    if (!sessionId || !user) return;
     setIsLoadingMessages(true);
     setError("");
 
@@ -242,6 +250,7 @@ export default function ChatPage() {
         .from(CHAT_HISTORY_TABLE)
         .select("id,message")
         .eq("session_id", sessionId)
+        .eq("user_id", user.id)
         .order("id", { ascending: true });
 
       if (fetchError) throw fetchError;
@@ -266,6 +275,8 @@ export default function ChatPage() {
   }
 
   useEffect(() => {
+    if (!user) return;
+
     document.title = "Jarvis | Chat";
 
     async function boot() {
@@ -279,7 +290,7 @@ export default function ChatPage() {
 
     boot();
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
+  }, [user.id]);
 
   useEffect(() => {
     bottomRef.current?.scrollIntoView({ behavior: "smooth", block: "end" });
@@ -359,6 +370,8 @@ export default function ChatPage() {
           chatInput: userMessage,
           sessionId: activeSessionId,
           session_id: activeSessionId,
+          userId: user.id,
+          user_id: user.id,
           action: "chat"
         })
       });

@@ -1,5 +1,6 @@
 import "./globals.css";
 import AppShell from "@/components/AppShell";
+import { AuthProvider } from "@/components/AuthProvider";
 
 export const metadata = {
   title: "Jarvis",
@@ -13,7 +14,9 @@ export default function RootLayout({ children }) {
   return (
     <html lang="en">
       <body>
-        <AppShell>{children}</AppShell>
+        <AuthProvider>
+          <AppShell>{children}</AppShell>
+        </AuthProvider>
       </body>
     </html>
   );
