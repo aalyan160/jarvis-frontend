@@ -56,7 +56,7 @@ function TypingIndicator() {
       <div className="grid h-9 w-9 shrink-0 place-items-center rounded-full border-2 border-[#00BCD4] bg-[linear-gradient(135deg,_#00BCD4,_#006064)] text-white shadow-[0_0_18px_rgba(0,188,212,0.35)]">
         <BrainCircuit className="h-[18px] w-[18px]" />
       </div>
-      <div className="flex items-center gap-1.5 rounded-2xl rounded-bl-md border border-white/[0.08] bg-jarvis-card px-4 py-3.5">
+      <div className="flex items-center gap-1.5 rounded-2xl rounded-bl-md border border-white/[0.08] bg-[#202A33] px-4 py-3.5">
         {[0, 1, 2].map((dot) => (
           <span
             key={dot}
@@ -85,7 +85,7 @@ function MessageBubble({ message }) {
           className={`whitespace-pre-wrap px-4 py-3 text-[15px] leading-6 ${
             isUser
               ? "rounded-2xl rounded-br-md border border-jarvis-accent/20 bg-jarvis-accent/20 text-cyan-50 shadow-[0_8px_28px_rgba(0,212,255,0.08)]"
-              : "rounded-2xl rounded-bl-md border border-white/[0.08] bg-jarvis-card text-zinc-100 shadow-[0_8px_28px_rgba(0,0,0,0.16)]"
+              : "rounded-2xl rounded-bl-md border border-white/[0.08] bg-[#202A33] text-zinc-100 shadow-[0_8px_28px_rgba(0,0,0,0.16)]"
           }`}
         >
           {isUser ? (
@@ -502,7 +502,7 @@ export default function ChatPage() {
               type="button"
               onClick={sendMessage}
               disabled={!input.trim() || isSending}
-              className="grid h-12 w-12 shrink-0 cursor-pointer place-items-center rounded-lg border border-[#00BCD4]/50 bg-[#00BCD4]/10 text-[#00BCD4] shadow-[0_0_18px_rgba(0,188,212,0.18)] transition-all duration-200 ease-in-out hover:scale-110 hover:bg-[#00BCD4]/20 hover:text-white hover:shadow-[0_0_24px_rgba(0,188,212,0.4)] disabled:cursor-not-allowed disabled:border-zinc-700 disabled:bg-zinc-900 disabled:text-[#00BCD4]/35 disabled:shadow-none disabled:hover:scale-100"
+              className="grid h-12 w-12 shrink-0 cursor-pointer place-items-center rounded-lg border border-[#00BCD4]/50 bg-[#00BCD4]/10 text-[#00BCD4] shadow-[0_0_18px_rgba(0,188,212,0.18)] transition-all duration-200 ease-in-out hover:scale-110 hover:bg-[#00BCD4]/20 hover:text-white hover:brightness-[1.3] hover:shadow-[0_0_24px_rgba(0,188,212,0.4)] disabled:cursor-not-allowed disabled:border-zinc-700 disabled:bg-zinc-900 disabled:text-[#00BCD4]/35 disabled:shadow-none disabled:hover:scale-100 disabled:hover:brightness-100"
               aria-label="Send message"
             >
               <Send className="h-5 w-5" />
