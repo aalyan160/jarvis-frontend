@@ -408,6 +408,7 @@ export default function ChatPage() {
         className={`fixed bottom-0 left-0 top-14 z-50 w-[320px] max-w-[calc(100vw-1rem)] overflow-hidden lg:left-[260px] ${
           showHistory ? "drop-shadow-[18px_0_50px_rgba(0,0,0,0.45)]" : "pointer-events-none"
         }`}
+        inert={showHistory ? undefined : ""}
       >
         <aside
           className={`flex h-full w-full flex-col border-r border-jarvis-border bg-jarvis-surface transition-transform duration-300 ease-in-out ${
