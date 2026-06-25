@@ -73,8 +73,8 @@ button {
 }
 
 .sidebar-scrollbar::-webkit-scrollbar {
-  width: 6px;
-  height: 6px;
+  width: 4px;
+  height: 4px;
 }
 
 .sidebar-scrollbar::-webkit-scrollbar-track {
@@ -83,7 +83,7 @@ button {
 
 .sidebar-scrollbar::-webkit-scrollbar-thumb {
   background-color: #00bcd4;
-  border-radius: 999px;
+  border-radius: 4px;
 }
 
 .sidebar-scrollbar::-webkit-scrollbar-thumb:hover {
