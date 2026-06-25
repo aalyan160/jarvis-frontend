@@ -69,24 +69,25 @@ button {
 
 .sidebar-scrollbar {
   scrollbar-width: thin;
-  scrollbar-color: rgba(0, 212, 255, 0.38) #0a0a0a;
+  scrollbar-color: #00bcd4 transparent;
 }
 
 .sidebar-scrollbar::-webkit-scrollbar {
-  width: 5px;
+  width: 6px;
+  height: 6px;
 }
 
 .sidebar-scrollbar::-webkit-scrollbar-track {
-  background: #0a0a0a;
+  background: transparent;
 }
 
 .sidebar-scrollbar::-webkit-scrollbar-thumb {
-  background: rgba(0, 212, 255, 0.38);
+  background-color: #00bcd4;
   border-radius: 999px;
 }
 
 .sidebar-scrollbar::-webkit-scrollbar-thumb:hover {
-  background: rgba(0, 212, 255, 0.65);
+  background-color: #26c6da;
 }
 
 .skeleton-shimmer {
