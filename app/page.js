@@ -404,13 +404,18 @@ export default function ChatPage() {
         aria-hidden="true"
       />
 
-      <aside
-        className={`fixed bottom-0 left-0 top-14 z-50 flex w-[320px] max-w-[calc(100vw-1rem)] flex-col border-r border-jarvis-border bg-jarvis-surface shadow-[18px_0_50px_rgba(0,0,0,0.45)] transition-transform duration-300 ease-in-out lg:left-[260px] ${
-          showHistory ? "translate-x-0" : "pointer-events-none -translate-x-full"
+      <div
+        className={`fixed bottom-0 left-0 top-14 z-50 w-[320px] max-w-[calc(100vw-1rem)] overflow-hidden lg:left-[260px] ${
+          showHistory ? "drop-shadow-[18px_0_50px_rgba(0,0,0,0.45)]" : "pointer-events-none"
         }`}
-        aria-label="Chat history"
-        aria-hidden={!showHistory}
       >
+        <aside
+          className={`flex h-full w-full flex-col border-r border-jarvis-border bg-jarvis-surface transition-transform duration-300 ease-in-out ${
+            showHistory ? "translate-x-0" : "-translate-x-full"
+          }`}
+          aria-label="Chat history"
+          aria-hidden={!showHistory}
+        >
         <div className="flex items-center justify-between border-b border-jarvis-border px-4 py-3.5">
           <div>
             <h2 className="text-sm font-bold text-zinc-100">Conversations</h2>
@@ -473,7 +478,8 @@ export default function ChatPage() {
             </div>
           ) : null}
         </div>
-      </aside>
+        </aside>
+      </div>
 
       <section className="flex h-full min-h-0 flex-col rounded-xl border border-jarvis-border bg-jarvis-surface">
         <div className="flex min-h-[68px] items-center justify-between gap-3 border-b border-jarvis-border px-4 py-3 sm:px-5">
