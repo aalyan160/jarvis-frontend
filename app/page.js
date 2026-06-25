@@ -53,7 +53,7 @@ const markdownComponents = {
 function TypingIndicator() {
   return (
     <div className="flex items-start gap-2.5">
-      <div className="grid h-9 w-9 shrink-0 place-items-center rounded-full border border-cyan-200/25 bg-gradient-to-br from-cyan-300 via-cyan-500 to-blue-600 text-black shadow-[0_0_18px_rgba(0,212,255,0.28)]">
+      <div className="grid h-9 w-9 shrink-0 place-items-center rounded-full border-2 border-[#00BCD4] bg-[linear-gradient(135deg,_#00BCD4,_#006064)] text-white shadow-[0_0_18px_rgba(0,188,212,0.35)]">
         <BrainCircuit className="h-[18px] w-[18px]" />
       </div>
       <div className="flex items-center gap-1.5 rounded-2xl rounded-bl-md border border-white/[0.08] bg-jarvis-card px-4 py-3.5">
@@ -76,7 +76,7 @@ function MessageBubble({ message }) {
   return (
     <div className={`flex items-start gap-2.5 ${isUser ? "justify-end" : "justify-start"}`}>
       {!isUser ? (
-        <div className="mt-0.5 grid h-9 w-9 shrink-0 place-items-center rounded-full border border-cyan-200/25 bg-gradient-to-br from-cyan-300 via-cyan-500 to-blue-600 text-black shadow-[0_0_18px_rgba(0,212,255,0.28)]">
+        <div className="mt-0.5 grid h-9 w-9 shrink-0 place-items-center rounded-full border-2 border-[#00BCD4] bg-[linear-gradient(135deg,_#00BCD4,_#006064)] text-white shadow-[0_0_18px_rgba(0,188,212,0.35)]">
           <BrainCircuit className="h-[18px] w-[18px]" />
         </div>
       ) : null}
