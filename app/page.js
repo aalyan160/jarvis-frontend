@@ -517,7 +517,7 @@ export default function ChatPage() {
           {isLoadingMessages ? <LoadingSkeleton rows={4} /> : null}
           {!isLoadingMessages && !error && messages.length === 0 ? <EmptyState message="No messages yet" /> : null}
           {!isLoadingMessages ? (
-            <div className="mx-auto max-w-4xl space-y-5">
+            <div className="mx-auto max-w-4xl space-y-4">
               {messages.map((message) => (
                 <MessageBubble key={message.id} message={message} />
               ))}
