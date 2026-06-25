@@ -12,6 +12,10 @@ import { formatDateTime, formatRelativeTime, normalizeMessage, truncate } from "
 
 const CHAT_HISTORY_TABLE = "n8n_chat_histories";
 
+function isDuplicateConversationTitle(title) {
+  return /^\s*=/.test(String(title || ""));
+}
+
 const markdownComponents = {
   h1: ({ children }) => <h1 className="mb-3 mt-1 text-xl font-bold text-white">{children}</h1>,
   h2: ({ children }) => <h2 className="mb-2.5 mt-4 text-lg font-bold text-white">{children}</h2>,
@@ -207,9 +211,9 @@ export default function ChatPage() {
         }
       });
 
-      const nextSessions = Array.from(grouped.values()).sort(
-        (a, b) => b.lastId - a.lastId
-      ).filter((session) => !String(session.firstPreview || "").trimStart().startsWith("="));
+      const nextSessions = Array.from(grouped.values())
+        .filter((session) => !isDuplicateConversationTitle(session.firstPreview))
+        .sort((a, b) => b.lastId - a.lastId);
 
       setSessions(nextSessions);
 
