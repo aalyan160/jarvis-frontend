@@ -502,7 +502,7 @@ export default function ChatPage() {
               type="button"
               onClick={sendMessage}
               disabled={!input.trim() || isSending}
-              className="grid h-12 w-12 shrink-0 place-items-center rounded-lg bg-[#00DFF7] text-black shadow-[0_0_18px_rgba(0,223,247,0.28)] transition-all duration-200 hover:scale-[1.04] hover:bg-[#32EFFF] hover:shadow-[0_0_24px_rgba(50,239,255,0.5)] disabled:cursor-not-allowed disabled:bg-zinc-800 disabled:text-zinc-600 disabled:shadow-none disabled:hover:scale-100"
+              className="grid h-12 w-12 shrink-0 cursor-pointer place-items-center rounded-lg border border-[#00BCD4]/50 bg-[#00BCD4]/10 text-[#00BCD4] shadow-[0_0_18px_rgba(0,188,212,0.18)] transition-all duration-200 ease-in-out hover:scale-110 hover:bg-[#00BCD4]/20 hover:text-white hover:shadow-[0_0_24px_rgba(0,188,212,0.4)] disabled:cursor-not-allowed disabled:border-zinc-700 disabled:bg-zinc-900 disabled:text-[#00BCD4]/35 disabled:shadow-none disabled:hover:scale-100"
               aria-label="Send message"
             >
               <Send className="h-5 w-5" />
