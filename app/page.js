@@ -1,7 +1,7 @@
 "use client";
 
-import { useEffect, useMemo, useRef, useState } from "react";
-import { ArrowLeft, MessageSquarePlus, PanelLeftOpen, Send } from "lucide-react";
+import { useEffect, useRef, useState } from "react";
+import { ArrowLeft, BrainCircuit, Clock3, MessageSquarePlus, Send } from "lucide-react";
 import LoadingSkeleton from "@/components/LoadingSkeleton";
 import { EmptyState, ErrorState } from "@/components/StateViews";
 import { useToast } from "@/components/Toast";
@@ -13,11 +13,11 @@ const CHAT_HISTORY_TABLE = "n8n_chat_histories";
 
 function TypingIndicator() {
   return (
-    <div className="flex items-start gap-3">
-      <div className="grid h-8 w-8 shrink-0 place-items-center rounded-full border border-jarvis-accent/40 bg-jarvis-accent/10 text-sm font-extrabold text-jarvis-accent shadow-softGlow">
+    <div className="flex items-start gap-2.5">
+      <div className="grid h-9 w-9 shrink-0 place-items-center rounded-full border border-jarvis-accent/35 bg-jarvis-accent/10 text-sm font-extrabold text-jarvis-accent shadow-softGlow">
         J
       </div>
-      <div className="flex items-center gap-1 rounded-[20px] border border-jarvis-border bg-jarvis-card px-4 py-3">
+      <div className="flex items-center gap-1.5 rounded-2xl rounded-bl-md border border-white/[0.08] bg-jarvis-card px-4 py-3.5">
         {[0, 1, 2].map((dot) => (
           <span
             key={dot}
@@ -32,29 +32,35 @@ function TypingIndicator() {
 
 function MessageBubble({ message }) {
   const isUser = message.role === "user";
+  const timestamp = formatDateTime(message.created_at);
 
   return (
-    <div className={`flex items-start gap-3 ${isUser ? "justify-end" : "justify-start"}`}>
+    <div className={`flex items-start gap-2.5 ${isUser ? "justify-end" : "justify-start"}`}>
       {!isUser ? (
-        <div className="grid h-8 w-8 shrink-0 place-items-center rounded-full border border-jarvis-accent/40 bg-jarvis-accent/10 text-sm font-extrabold text-jarvis-accent shadow-softGlow">
+        <div className="mt-0.5 grid h-9 w-9 shrink-0 place-items-center rounded-full border border-jarvis-accent/35 bg-jarvis-accent/10 text-sm font-extrabold text-jarvis-accent shadow-softGlow">
           J
         </div>
       ) : null}
-      <div className={`max-w-[84%] sm:max-w-[70%] ${isUser ? "text-right" : "text-left"}`}>
+      <div className={`max-w-[86%] sm:max-w-[72%] ${isUser ? "text-right" : "text-left"}`}>
         <div
-          className={`whitespace-pre-wrap rounded-[20px] px-4 py-3 text-sm leading-relaxed ${
+          className={`whitespace-pre-wrap px-4 py-3 text-[15px] leading-6 ${
             isUser
-              ? "bg-jarvis-accent/20 text-white"
-              : "border border-jarvis-border bg-jarvis-card text-white"
+              ? "rounded-2xl rounded-br-md border border-jarvis-accent/20 bg-jarvis-accent/20 text-cyan-50 shadow-[0_8px_28px_rgba(0,212,255,0.08)]"
+              : "rounded-2xl rounded-bl-md border border-white/[0.08] bg-jarvis-card text-zinc-100 shadow-[0_8px_28px_rgba(0,0,0,0.16)]"
           }`}
         >
           {message.content}
         </div>
-        {formatDateTime(message.created_at) ? (
-          <div className="mt-1 px-2 text-[11px] text-zinc-600">
-            {formatDateTime(message.created_at)}
-          </div>
-        ) : null}
+        <div className={`mt-1.5 flex items-center gap-1.5 px-1 text-[11px] font-medium text-zinc-600 ${isUser ? "justify-end" : "justify-start"}`}>
+          <span>{isUser ? "You" : "Jarvis"}</span>
+          {timestamp ? (
+            <>
+              <span className="h-0.5 w-0.5 rounded-full bg-zinc-700" />
+              <Clock3 className="h-3 w-3" />
+              <span>{timestamp}</span>
+            </>
+          ) : null}
+        </div>
       </div>
     </div>
   );
@@ -73,11 +79,7 @@ export default function ChatPage() {
   const [storageWarning, setStorageWarning] = useState("");
   const [showHistory, setShowHistory] = useState(true);
   const bottomRef = useRef(null);
-
-  const truncatedSessionId = useMemo(() => {
-    if (!activeSessionId) return "";
-    return activeSessionId.length > 18 ? `${activeSessionId.slice(0, 8)}...${activeSessionId.slice(-6)}` : activeSessionId;
-  }, [activeSessionId]);
+  const inputRef = useRef(null);
 
   function getErrorMessage(fetchError) {
     return fetchError?.message || fetchError?.details || "Unknown Supabase error";
@@ -150,12 +152,15 @@ export default function ChatPage() {
           grouped.set(row.session_id, {
             session_id: row.session_id,
             firstPreview: normalized.content,
+            latestPreview: normalized.content,
             lastId: row.id,
-            earliestId: row.id
+            earliestId: row.id,
+            messageCount: 1
           });
           return;
         }
 
+        existing.messageCount += 1;
         if (row.id < existing.earliestId) {
           existing.earliestId = row.id;
           existing.firstPreview = normalized.content;
@@ -235,6 +240,13 @@ export default function ChatPage() {
   useEffect(() => {
     bottomRef.current?.scrollIntoView({ behavior: "smooth", block: "end" });
   }, [messages, isSending]);
+
+  useEffect(() => {
+    const textarea = inputRef.current;
+    if (!textarea) return;
+    textarea.style.height = "auto";
+    textarea.style.height = `${Math.min(textarea.scrollHeight, 144)}px`;
+  }, [input]);
 
   async function startNewChat() {
     const sessionId = crypto.randomUUID();
@@ -321,12 +333,12 @@ export default function ChatPage() {
   }
 
   return (
-    <div className="grid h-[calc(100dvh-6rem)] min-h-[620px] grid-cols-1 gap-4 xl:grid-cols-[300px_minmax(0,1fr)]">
+    <div className="grid h-[calc(100dvh-5.5rem)] min-h-[500px] grid-cols-1 gap-4 sm:h-[calc(100dvh-6.5rem)] xl:grid-cols-[310px_minmax(0,1fr)]">
       <section className={`${showHistory ? "flex" : "hidden"} min-h-0 flex-col rounded-xl border border-jarvis-border bg-jarvis-surface xl:flex`}>
-        <div className="flex items-center justify-between border-b border-jarvis-border p-4">
+        <div className="flex items-center justify-between border-b border-jarvis-border px-4 py-3.5">
           <div>
-            <h2 className="text-sm font-bold uppercase text-zinc-300">Conversations</h2>
-            <p className="mt-1 text-xs text-zinc-600">{sessions.length} sessions</p>
+            <h2 className="text-sm font-bold text-zinc-100">Conversations</h2>
+            <p className="mt-0.5 text-xs font-medium text-zinc-600">{sessions.length} saved sessions</p>
           </div>
           <button
             type="button"
@@ -338,11 +350,11 @@ export default function ChatPage() {
           </button>
         </div>
 
-        <div className="min-h-0 flex-1 overflow-y-auto p-3">
+        <div className="min-h-0 flex-1 overflow-y-auto px-2 py-2">
           {isLoadingSessions ? <LoadingSkeleton rows={5} /> : null}
           {!isLoadingSessions && sessions.length === 0 ? <EmptyState message="No conversations yet" /> : null}
           {!isLoadingSessions && sessions.length > 0 ? (
-            <div className="space-y-2">
+            <div className="divide-y divide-white/[0.06]">
               {sessions.map((session) => {
                 const active = session.session_id === activeSessionId;
 
@@ -351,14 +363,21 @@ export default function ChatPage() {
                     type="button"
                     key={session.session_id}
                     onClick={() => selectSession(session.session_id)}
-                    className={`w-full rounded-xl border p-3 text-left transition-all ${
+                    className={`relative w-full overflow-hidden rounded-lg border px-3 py-3.5 text-left transition-all before:absolute before:inset-y-3 before:left-0 before:w-[3px] before:rounded-r-full before:bg-jarvis-accent ${
                       active
-                        ? "border-jarvis-accent bg-jarvis-accent/10 shadow-softGlow"
-                        : "border-jarvis-border bg-jarvis-card hover:border-jarvis-accent/40 hover:shadow-softGlow"
+                        ? "border-jarvis-accent/45 bg-jarvis-accent/10 shadow-softGlow before:opacity-100"
+                        : "border-transparent bg-transparent before:opacity-0 hover:border-white/[0.08] hover:bg-white/[0.035]"
                     }`}
                   >
-                    <div className="text-sm font-semibold text-white">{truncate(session.firstPreview || "New conversation", 40)}</div>
-                    <div className="mt-2 text-xs text-zinc-500">Latest message #{session.lastId}</div>
+                    <div className="truncate text-sm font-semibold text-white">
+                      {truncate(session.firstPreview || "New conversation", 44)}
+                    </div>
+                    <div className="mt-1.5 truncate text-xs leading-5 text-zinc-500">
+                      {truncate(session.latestPreview || "No message preview", 54)}
+                    </div>
+                    <div className="mt-1 text-[11px] font-medium text-zinc-700">
+                      {session.messageCount} {session.messageCount === 1 ? "message" : "messages"}
+                    </div>
                   </button>
                 );
               })}
@@ -368,7 +387,7 @@ export default function ChatPage() {
       </section>
 
       <section className={`${showHistory ? "hidden" : "flex"} min-h-0 flex-col rounded-xl border border-jarvis-border bg-jarvis-surface xl:flex`}>
-        <div className="flex items-center justify-between gap-3 border-b border-jarvis-border px-4 py-3">
+        <div className="flex min-h-[68px] items-center justify-between gap-3 border-b border-jarvis-border px-4 py-3 sm:px-5">
           <div className="flex min-w-0 items-center gap-2">
             <button
               type="button"
@@ -378,17 +397,16 @@ export default function ChatPage() {
             >
               <ArrowLeft className="h-5 w-5" />
             </button>
-            <button
-              type="button"
-              onClick={() => setShowHistory(true)}
-              className="hidden h-10 w-10 place-items-center rounded-lg border border-jarvis-border text-zinc-300 hover:border-jarvis-accent hover:text-jarvis-accent hover:shadow-softGlow xl:grid"
-              aria-label="Show conversations"
-            >
-              <PanelLeftOpen className="h-5 w-5" />
-            </button>
+            <div className="grid h-10 w-10 shrink-0 place-items-center rounded-lg border border-jarvis-accent/25 bg-jarvis-accent/10 text-jarvis-accent shadow-softGlow">
+              <BrainCircuit className="h-5 w-5" />
+            </div>
             <div className="min-w-0">
-              <p className="text-xs uppercase text-zinc-600">Session</p>
-              <h2 className="truncate text-sm font-semibold text-white">{truncatedSessionId}</h2>
+              <h2 className="truncate text-sm font-bold text-white">Jarvis Main Brain</h2>
+              <div className="mt-0.5 flex items-center gap-1.5 text-xs font-medium text-zinc-500">
+                <span>GPT-4.1 mini</span>
+                <span className="h-1 w-1 rounded-full bg-zinc-700" />
+                <span className="text-jarvis-success">Connected</span>
+              </div>
             </div>
           </div>
           <button
@@ -401,7 +419,7 @@ export default function ChatPage() {
           </button>
         </div>
 
-        <div className="min-h-0 flex-1 overflow-y-auto p-4">
+        <div className="min-h-0 flex-1 overflow-y-auto bg-black/20 p-4 sm:p-6">
           {storageWarning ? (
             <div className="mb-4 rounded-xl border border-jarvis-warning/30 bg-jarvis-warning/10 p-4 text-sm text-jarvis-warning">
               {storageWarning}
@@ -411,7 +429,7 @@ export default function ChatPage() {
           {isLoadingMessages ? <LoadingSkeleton rows={4} /> : null}
           {!isLoadingMessages && !error && messages.length === 0 ? <EmptyState message="No messages yet" /> : null}
           {!isLoadingMessages ? (
-            <div className="space-y-5">
+            <div className="mx-auto max-w-4xl space-y-5">
               {messages.map((message) => (
                 <MessageBubble key={message.id} message={message} />
               ))}
@@ -421,22 +439,23 @@ export default function ChatPage() {
           ) : null}
         </div>
 
-        <div className="border-t border-jarvis-border p-3 sm:p-4">
-          <div className="flex items-end gap-3">
+        <div className="border-t border-jarvis-border bg-jarvis-surface p-3 sm:p-4">
+          <div className="mx-auto flex max-w-4xl items-end gap-2 rounded-xl border border-white/[0.09] bg-black/80 p-1.5 shadow-[0_12px_36px_rgba(0,0,0,0.28)] transition-all focus-within:border-jarvis-accent/60 focus-within:shadow-glow">
             <textarea
+              ref={inputRef}
               value={input}
               onChange={(event) => setInput(event.target.value)}
               onKeyDown={handleInputKeyDown}
               disabled={isSending}
               rows={1}
               placeholder="Message Jarvis"
-              className="max-h-36 min-h-11 flex-1 resize-none rounded-lg border border-jarvis-border bg-black px-4 py-3 text-sm text-white outline-none transition-all placeholder:text-zinc-600 focus:border-jarvis-accent focus:shadow-softGlow disabled:cursor-not-allowed disabled:opacity-60"
+              className="max-h-36 min-h-12 flex-1 resize-none overflow-y-auto border-0 bg-transparent px-3.5 py-3 text-[15px] leading-6 text-white outline-none placeholder:text-zinc-600 disabled:cursor-not-allowed disabled:opacity-60"
             />
             <button
               type="button"
               onClick={sendMessage}
               disabled={!input.trim() || isSending}
-              className="grid h-11 w-11 shrink-0 place-items-center rounded-lg bg-jarvis-accent text-black hover:shadow-glow disabled:cursor-not-allowed disabled:bg-zinc-700 disabled:text-zinc-500 disabled:shadow-none"
+              className="grid h-12 w-12 shrink-0 place-items-center rounded-lg bg-jarvis-accent text-black shadow-[0_0_18px_rgba(0,212,255,0.2)] hover:shadow-glow disabled:cursor-not-allowed disabled:bg-zinc-800 disabled:text-zinc-600 disabled:shadow-none"
               aria-label="Send message"
             >
               <Send className="h-5 w-5" />

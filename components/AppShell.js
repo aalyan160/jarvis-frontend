@@ -59,7 +59,7 @@ export default function AppShell({ children }) {
         pendingApprovals={pendingApprovals}
       />
       <div className="min-h-dvh bg-black lg:pl-[260px]">
-        <header className="sticky top-0 z-30 flex h-16 items-center justify-between border-b border-jarvis-border bg-black/88 px-4 backdrop-blur-xl sm:px-6">
+        <header className="sticky top-0 z-30 flex h-14 items-center justify-between border-b border-jarvis-border bg-black/88 px-4 backdrop-blur-xl sm:px-6">
           <div className="flex min-w-0 items-center gap-3">
             <button
               type="button"
@@ -69,20 +69,15 @@ export default function AppShell({ children }) {
             >
               <Menu className="h-5 w-5" />
             </button>
-            <div>
-              <h1 className="truncate text-lg font-bold text-white sm:text-xl">{title}</h1>
-              <div className="mt-0.5 flex items-center gap-2 text-xs font-medium text-zinc-500 sm:hidden">
-                <span className="h-2 w-2 rounded-full bg-jarvis-success" />
-                Online
-              </div>
+            <h1 className="truncate text-lg font-bold text-white">{title}</h1>
+            <div className="flex items-center gap-2 rounded-full border border-jarvis-success/20 bg-jarvis-success/[0.07] px-2.5 py-1 text-xs font-semibold text-zinc-300">
+              <span className="h-2 w-2 rounded-full bg-jarvis-success shadow-[0_0_10px_rgba(0,255,136,0.75)] animate-pulseDot" />
+              Online
             </div>
           </div>
-          <div className="hidden items-center gap-2 rounded-full border border-jarvis-border bg-jarvis-surface px-3 py-1.5 text-sm text-zinc-300 sm:flex">
-            <span className="h-2.5 w-2.5 rounded-full bg-jarvis-success shadow-[0_0_12px_rgba(0,255,136,0.85)] animate-pulseDot" />
-            Jarvis Online
-          </div>
+          <div className="hidden text-xs font-semibold uppercase text-zinc-600 sm:block">JARVIS OS</div>
         </header>
-        <main className="min-h-[calc(100dvh-4rem)] p-4 sm:p-6">{children}</main>
+        <main className="min-h-[calc(100dvh-3.5rem)] p-4 sm:p-6">{children}</main>
       </div>
     </ToastProvider>
   );

@@ -12,11 +12,41 @@ import {
 } from "lucide-react";
 
 const navItems = [
-  { href: "/", label: "Chat", icon: MessageSquareText },
-  { href: "/approvals", label: "Approvals", icon: Bell },
-  { href: "/tasks", label: "Tasks", icon: ClipboardList },
-  { href: "/contacts", label: "Contacts", icon: Contact },
-  { href: "/logs", label: "Tool Logs", icon: FileClock }
+  {
+    href: "/",
+    label: "Chat",
+    icon: MessageSquareText,
+    iconClass: "text-cyan-300",
+    iconSurface: "bg-cyan-400/10"
+  },
+  {
+    href: "/approvals",
+    label: "Approvals",
+    icon: Bell,
+    iconClass: "text-amber-300",
+    iconSurface: "bg-amber-400/10"
+  },
+  {
+    href: "/tasks",
+    label: "Tasks",
+    icon: ClipboardList,
+    iconClass: "text-violet-300",
+    iconSurface: "bg-violet-400/10"
+  },
+  {
+    href: "/contacts",
+    label: "Contacts",
+    icon: Contact,
+    iconClass: "text-emerald-300",
+    iconSurface: "bg-emerald-400/10"
+  },
+  {
+    href: "/logs",
+    label: "Tool Logs",
+    icon: FileClock,
+    iconClass: "text-sky-300",
+    iconSurface: "bg-sky-400/10"
+  }
 ];
 
 export default function Sidebar({ isOpen, onClose, pendingApprovals = 0 }) {
@@ -58,7 +88,7 @@ export default function Sidebar({ isOpen, onClose, pendingApprovals = 0 }) {
           Online
         </div>
 
-        <nav className="mt-6 flex-1 space-y-1 px-3">
+        <nav className="mt-6 flex-1 space-y-1.5 px-3">
           {navItems.map((item) => {
             const Icon = item.icon;
             const active = pathname === item.href;
@@ -68,13 +98,15 @@ export default function Sidebar({ isOpen, onClose, pendingApprovals = 0 }) {
                 key={item.href}
                 href={item.href}
                 onClick={onClose}
-                className={`group flex min-h-11 items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-semibold transition-all ${
+                className={`group relative flex min-h-12 items-center gap-3 overflow-hidden rounded-lg border px-2.5 py-2.5 text-sm font-semibold transition-all before:absolute before:inset-y-2 before:left-0 before:w-[3px] before:rounded-r-full before:bg-jarvis-accent before:transition-opacity ${
                   active
-                    ? "border border-jarvis-accent/45 bg-jarvis-accent/10 text-white shadow-softGlow"
-                    : "border border-transparent text-zinc-400 hover:border-jarvis-accent/25 hover:bg-jarvis-accent/5 hover:text-white hover:shadow-softGlow"
+                    ? "border-jarvis-accent/45 bg-jarvis-accent/15 text-white shadow-softGlow before:opacity-100"
+                    : "border-transparent text-zinc-400 before:opacity-0 hover:border-white/10 hover:bg-white/[0.04] hover:text-white"
                 }`}
               >
-                <Icon className="h-5 w-5 shrink-0 text-jarvis-accent" />
+                <span className={`grid h-8 w-8 shrink-0 place-items-center rounded-lg ${item.iconSurface}`}>
+                  <Icon className={`h-[18px] w-[18px] ${item.iconClass}`} />
+                </span>
                 <span className="min-w-0 flex-1">{item.label}</span>
                 {item.href === "/approvals" && pendingApprovals > 0 ? (
                   <span className="grid min-w-5 place-items-center rounded-full bg-jarvis-error px-1.5 py-0.5 text-xs font-bold text-white">

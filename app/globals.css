@@ -28,6 +28,10 @@ body {
   background: var(--background);
   color: #ffffff;
   font-family: "Inter", ui-sans-serif, system-ui, sans-serif;
+  font-synthesis: none;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  text-rendering: optimizeLegibility;
 }
 
 button,
