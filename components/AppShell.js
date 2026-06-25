@@ -75,7 +75,9 @@ export default function AppShell({ children }) {
               Online
             </div>
           </div>
-          <div className="hidden text-xs font-semibold uppercase text-zinc-600 sm:block">JARVIS OS</div>
+          <div className="hidden rounded-full border border-jarvis-accent/20 bg-jarvis-accent/[0.06] px-3 py-1.5 text-xs font-bold text-jarvis-accent sm:block">
+            JARVIS OS
+          </div>
         </header>
         <main className="min-h-[calc(100dvh-3.5rem)] p-4 sm:p-6">{children}</main>
       </div>

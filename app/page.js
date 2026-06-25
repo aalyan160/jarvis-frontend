@@ -2,20 +2,55 @@
 
 import { useEffect, useRef, useState } from "react";
 import { ArrowLeft, BrainCircuit, Clock3, MessageSquarePlus, Send } from "lucide-react";
+import ReactMarkdown from "react-markdown";
 import LoadingSkeleton from "@/components/LoadingSkeleton";
 import { EmptyState, ErrorState } from "@/components/StateViews";
 import { useToast } from "@/components/Toast";
 import { N8N_WEBHOOK_URL } from "@/lib/constants";
 import { supabase } from "@/lib/supabase";
-import { formatDateTime, normalizeMessage, truncate } from "@/lib/utils";
+import { formatDateTime, formatRelativeTime, normalizeMessage, truncate } from "@/lib/utils";
 
 const CHAT_HISTORY_TABLE = "n8n_chat_histories";
+
+const markdownComponents = {
+  h1: ({ children }) => <h1 className="mb-3 mt-1 text-xl font-bold text-white">{children}</h1>,
+  h2: ({ children }) => <h2 className="mb-2.5 mt-4 text-lg font-bold text-white">{children}</h2>,
+  h3: ({ children }) => <h3 className="mb-2 mt-3 text-base font-bold text-white">{children}</h3>,
+  p: ({ children }) => <p className="mb-3 last:mb-0">{children}</p>,
+  ul: ({ children }) => <ul className="mb-3 list-disc space-y-1.5 pl-5 marker:text-jarvis-accent">{children}</ul>,
+  ol: ({ children }) => <ol className="mb-3 list-decimal space-y-1.5 pl-5 marker:text-jarvis-accent">{children}</ol>,
+  li: ({ children }) => <li className="pl-1">{children}</li>,
+  strong: ({ children }) => <strong className="font-bold text-white">{children}</strong>,
+  blockquote: ({ children }) => (
+    <blockquote className="my-3 border-l-2 border-jarvis-accent/60 pl-3 text-zinc-400">
+      {children}
+    </blockquote>
+  ),
+  pre: ({ children }) => (
+    <pre className="my-3 overflow-x-auto rounded-lg border border-white/[0.08] bg-black/70 p-3 text-[13px] leading-5 text-cyan-100">
+      {children}
+    </pre>
+  ),
+  code: ({ className, children, ...props }) => (
+    <code
+      className={`${className || ""} rounded bg-black/50 px-1.5 py-0.5 font-mono text-[0.9em] text-cyan-200`}
+      {...props}
+    >
+      {children}
+    </code>
+  ),
+  a: ({ children, href }) => (
+    <a className="font-semibold text-jarvis-accent underline decoration-jarvis-accent/35 underline-offset-4" href={href}>
+      {children}
+    </a>
+  )
+};
 
 function TypingIndicator() {
   return (
     <div className="flex items-start gap-2.5">
-      <div className="grid h-9 w-9 shrink-0 place-items-center rounded-full border border-jarvis-accent/35 bg-jarvis-accent/10 text-sm font-extrabold text-jarvis-accent shadow-softGlow">
-        J
+      <div className="grid h-9 w-9 shrink-0 place-items-center rounded-full border border-cyan-200/25 bg-gradient-to-br from-cyan-300 via-cyan-500 to-blue-600 text-black shadow-[0_0_18px_rgba(0,212,255,0.28)]">
+        <BrainCircuit className="h-[18px] w-[18px]" />
       </div>
       <div className="flex items-center gap-1.5 rounded-2xl rounded-bl-md border border-white/[0.08] bg-jarvis-card px-4 py-3.5">
         {[0, 1, 2].map((dot) => (
@@ -37,8 +72,8 @@ function MessageBubble({ message }) {
   return (
     <div className={`flex items-start gap-2.5 ${isUser ? "justify-end" : "justify-start"}`}>
       {!isUser ? (
-        <div className="mt-0.5 grid h-9 w-9 shrink-0 place-items-center rounded-full border border-jarvis-accent/35 bg-jarvis-accent/10 text-sm font-extrabold text-jarvis-accent shadow-softGlow">
-          J
+        <div className="mt-0.5 grid h-9 w-9 shrink-0 place-items-center rounded-full border border-cyan-200/25 bg-gradient-to-br from-cyan-300 via-cyan-500 to-blue-600 text-black shadow-[0_0_18px_rgba(0,212,255,0.28)]">
+          <BrainCircuit className="h-[18px] w-[18px]" />
         </div>
       ) : null}
       <div className={`max-w-[86%] sm:max-w-[72%] ${isUser ? "text-right" : "text-left"}`}>
@@ -49,7 +84,11 @@ function MessageBubble({ message }) {
               : "rounded-2xl rounded-bl-md border border-white/[0.08] bg-jarvis-card text-zinc-100 shadow-[0_8px_28px_rgba(0,0,0,0.16)]"
           }`}
         >
-          {message.content}
+          {isUser ? (
+            message.content
+          ) : (
+            <ReactMarkdown components={markdownComponents}>{message.content}</ReactMarkdown>
+          )}
         </div>
         <div className={`mt-1.5 flex items-center gap-1.5 px-1 text-[11px] font-medium text-zinc-600 ${isUser ? "justify-end" : "justify-start"}`}>
           <span>{isUser ? "You" : "Jarvis"}</span>
@@ -117,7 +156,7 @@ export default function ChatPage() {
         .from(CHAT_HISTORY_TABLE)
         .insert({
           session_id: activeSessionId,
-          message: { type, content }
+          message: { type, content, created_at: new Date().toISOString() }
         });
 
       if (saveError) throw saveError;
@@ -153,6 +192,7 @@ export default function ChatPage() {
             session_id: row.session_id,
             firstPreview: normalized.content,
             latestPreview: normalized.content,
+            latestTimestamp: normalized.created_at,
             lastId: row.id,
             earliestId: row.id,
             messageCount: 1
@@ -169,7 +209,7 @@ export default function ChatPage() {
 
       const nextSessions = Array.from(grouped.values()).sort(
         (a, b) => b.lastId - a.lastId
-      );
+      ).filter((session) => !String(session.firstPreview || "").trimStart().startsWith("="));
 
       setSessions(nextSessions);
 
@@ -350,7 +390,7 @@ export default function ChatPage() {
           </button>
         </div>
 
-        <div className="min-h-0 flex-1 overflow-y-auto px-2 py-2">
+        <div className="sidebar-scrollbar min-h-0 flex-1 overflow-y-auto px-2 py-2">
           {isLoadingSessions ? <LoadingSkeleton rows={5} /> : null}
           {!isLoadingSessions && sessions.length === 0 ? <EmptyState message="No conversations yet" /> : null}
           {!isLoadingSessions && sessions.length > 0 ? (
@@ -377,6 +417,9 @@ export default function ChatPage() {
                     </div>
                     <div className="mt-1 text-[11px] font-medium text-zinc-700">
                       {session.messageCount} {session.messageCount === 1 ? "message" : "messages"}
+                    </div>
+                    <div className="mt-0.5 text-[11px] font-medium text-zinc-600">
+                      {formatRelativeTime(session.latestTimestamp)}
                     </div>
                   </button>
                 );
@@ -412,7 +455,7 @@ export default function ChatPage() {
           <button
             type="button"
             onClick={startNewChat}
-            className="hidden min-h-11 rounded-lg border border-jarvis-accent/40 bg-jarvis-accent/10 px-4 text-sm font-semibold text-jarvis-accent hover:shadow-glow sm:inline-flex sm:items-center sm:gap-2"
+            className="hidden min-h-11 rounded-lg border border-jarvis-accent bg-jarvis-accent px-4 text-sm font-bold text-black shadow-[0_0_18px_rgba(0,212,255,0.2)] hover:bg-cyan-300 hover:shadow-glow sm:inline-flex sm:items-center sm:gap-2"
           >
             <MessageSquarePlus className="h-4 w-4" />
             New Chat

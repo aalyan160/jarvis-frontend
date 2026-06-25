@@ -83,12 +83,7 @@ export default function Sidebar({ isOpen, onClose, pendingApprovals = 0 }) {
           </button>
         </div>
 
-        <div className="mx-5 flex items-center gap-2 rounded-full border border-jarvis-border bg-jarvis-surface px-3 py-2 text-sm text-zinc-300">
-          <span className="h-2.5 w-2.5 rounded-full bg-jarvis-success shadow-[0_0_12px_rgba(0,255,136,0.85)] animate-pulseDot" />
-          Online
-        </div>
-
-        <nav className="mt-6 flex-1 space-y-1.5 px-3">
+        <nav className="sidebar-scrollbar mt-3 flex-1 space-y-1.5 overflow-y-auto px-3 py-3">
           {navItems.map((item) => {
             const Icon = item.icon;
             const active = pathname === item.href;
